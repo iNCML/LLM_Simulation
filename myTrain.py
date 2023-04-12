@@ -44,16 +44,16 @@ eval_interval = 1000
 eval_iters = 200
 
 batch_size = 12 
-block_size = 64 #128 #1024
+block_size = 128 #1024
 # model
-n_layer = 3 #12
-n_head = 3 #12
-n_embd = 768
+n_layer = 3
+n_head = 12
+n_embd = 768 #1000
 dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
 learning_rate = 6e-4 # max learning rate
-max_iters = 20000 #600000 # total number of training iterations
+max_iters = 600000 # total number of training iterations
 weight_decay = 1e-1
 beta1 = 0.9
 beta2 = 0.95
@@ -170,9 +170,13 @@ while True:
       t0 = t1
 
       losses = estimate_loss()
-      print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f} (time lapses {dt:.4f} seconds)")  
+      print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f} (time lapses {dt:.4f} seconds)")
+      
+      model_name = f'/tmp/my_model_{iter_num}' ;
+      torch.save(model, model_name)
  
     iter_num += 1
+
 
     # termination conditions
     if iter_num > max_iters:
