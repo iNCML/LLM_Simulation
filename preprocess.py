@@ -1,4 +1,6 @@
 import numpy as np
+import torch
+from torch.nn import functional as F
 
 ### about alphabet ###
 chars = '\nabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPGRSTUVWXYZ'
@@ -41,4 +43,11 @@ def KL_Divergence(p1,p2):
     return np.inner(p1, np.log(p1+1.0e-10)-np.log(p2+1.0e-10))
 
 
-
+def eval_transformer(prompt, model):
+    X = torch.tensor(encode(prompt))
+    X = X.view(1,-1)
+    
+    logits, _ = model(X)
+    probs = F.softmax(logits.view(-1), dim=-1)
+    return probs.detach().numpy()
+                    

@@ -1,4 +1,4 @@
-# evaluate in-context learning under various number of prompts 
+# evaluate language understanding under one prompt 
 
 import math
 import torch
@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-M", "--model_file", type=str, help="the path for the model file")
 parser.add_argument("-T", "--trans_file", type=str, help="the path for the transition file")
 parser.add_argument("-n", "--eval_num", type=int, help="number of evaluated prompts")
-parser.add_argument("-m", "--max_prompt", type=int, help="maximum number of evaluated prompts at each case")
+parser.add_argument("-l", "--len_prompt", type=int, help="maximum number of evaluated prompts at each case")
 
 args = parser.parse_args()
 
@@ -32,10 +32,11 @@ if args.eval_num != None:
 else:
     eval_samples = 200
 
-if args.max_prompt != None:
-    max_prompt = args.max_prompt
+
+if args.len_prompt != None:
+    len_prompt = args.len_prompt
 else:
-    max_prompt = 4
+    len_prompt = 5
     
 # load model
 print(f'loading model from {model_file} ...')
@@ -55,26 +56,21 @@ IntentionMatrix = np.load('/tmp/IntentTransition.npy')
 
 np.set_printoptions(suppress = True)
 
-intents = np.random.randint(len(Transition), size=eval_samples)
-results = np.zeros((eval_samples, max_prompt))
+results = np.zeros((eval_samples, len_prompt))
 
-for k in range(eval_samples):
-    it = intents[k]
-
-    # true prob dist
-    nLetters = Transition.size(1)//Transition.size(0)
-    arraysize = Transition.size(1)
-    trueprob = np.zeros(arraysize+1)
-    for i in range(2*nLetters):
-        trueprob[1+(i+it*nLetters)%arraysize] = 1.0/(2*nLetters)
-                                   
-    prompt = ""
-    for j in range(max_prompt):
-        mes, ch = gen_message(Transition, it, 20)
-        prompt = mes + "\n" + prompt
+for ll in range(1, len_prompt+1):
+    for k in range(eval_samples):
+        
+        it = np.random.randint(len(Transition), size=1).item()
+        prompt, ch = gen_message(Transition, it, ll)        
         probs = eval_transformer(prompt, model)
-        results[k,j] = KL_Divergence(trueprob,probs)
-    
-    #print(results[k])
 
+        # true prob dist
+        nLetters = Transition.size(1)//Transition.size(0)
+        arraysize = Transition.size(1)
+        trueprob = np.zeros(arraysize+1)
+        trueprob[1:] = Transition[it,ch]  
+
+#        print(f'prompt={prompt} KLD={KL_Divergence(trueprob,probs)}')
+        results[k,ll-1] = KL_Divergence(trueprob,probs)
 print(np.average(results,0))
