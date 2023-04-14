@@ -3,10 +3,21 @@ import time
 import math
 import numpy as np
 import torch
+import argparse
 
 from myModel import *
 
 # load text file as a character string; build char-level vocabulary, encoder and decoder
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-b", "--block_size", type=int, help="block size of transformer")
+
+args = parser.parse_args()
+
+if args.block_size != None:
+    block_size = args.block_size
+else:
+    block_size = 64
 
 with open('/tmp/input.txt', 'r') as f:
     data = f.read()
@@ -40,11 +51,11 @@ print(f"val has {len(val_ids):,} tokens")
 # -----------------------------------------------------------------------------
 # default config values 
 # I/O
-eval_interval = 1000
+eval_interval = 100 #1000
 eval_iters = 200
 
 batch_size = 12 
-block_size = 128 #1024
+#block_size = 512 #256 #64 #32 #256 #128 #1024
 # model
 n_layer = 3
 n_head = 12
@@ -53,7 +64,7 @@ dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
 learning_rate = 6e-4 # max learning rate
-max_iters = 600000 # total number of training iterations
+max_iters = 5000 #600000 # total number of training iterations
 weight_decay = 1e-1
 beta1 = 0.9
 beta2 = 0.95
@@ -93,7 +104,7 @@ model_args = dict(n_layer=n_layer, n_head=n_head, n_embd=n_embd, block_size=bloc
                   bias=bias, vocab_size=None, dropout=dropout, device=device) # start with model_args from command line
 
 # init a new model from scratch
-print("Initializing a new model from scratch")
+print(f'Initializing a new model from scratch ... (block_size={block_size})')
 model_args['vocab_size'] = vocab_size
 model_args['device'] = device
 gptconf = GPTConfig(**model_args)
@@ -170,13 +181,12 @@ while True:
       t0 = t1
 
       losses = estimate_loss()
-      print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f} (time lapses {dt:.4f} seconds)")
+      print(f"step {iter_num}: train loss {losses['train']:.4f} , val loss {losses['val']:.4f} (time lapses {dt:.4f} seconds)")
       
       model_name = f'/tmp/my_model_{iter_num}' ;
       torch.save(model, model_name)
  
     iter_num += 1
-
 
     # termination conditions
     if iter_num > max_iters:

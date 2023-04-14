@@ -104,14 +104,14 @@ for k in range(eval_samples):
         #print(f'transformer {X[j]-1} {Y[j]-1} {torch.log(probs[j,Y[j]])}')
 
     score2 = 0.0
-    allscores = torch.zeros(nIntention)
+    allscores = torch.zeros(nIntention) + math.log(1.0/nIntention)
     for j in range(block_size):
         if X[j] in SEP:
             allscores += math.log(1.0/nLetters)
             #print(f'true2:  {X[j]-1} {Y[j]-1} {math.log(1.0/nLetters)}')
         elif Y[j] in SEP:
             score2 += torch.logsumexp(allscores,0)
-            allscores = torch.zeros(nIntention)
+            allscores = torch.zeros(nIntention) + math.log(1.0/nIntention)
             #print(f'true2:  {X[j]-1} {Y[j]-1} 0.0')
         else:
             for k in range(nIntention):
@@ -121,7 +121,7 @@ for k in range(eval_samples):
           
     score2 += torch.logsumexp(allscores,0)
 
-    #print(f'transformer={score1/block_size:.5f}  true={score2/block_size:.5f}  diff={abs(score1-score2)/block_size:.5f}')
+#    print(f'transformer={score1/block_size:.5f}  true={score2/block_size:.5f}  diff={abs(score1-score2)/block_size:.5f}')
     ave_diff += abs(score1-score2)/block_size
 
 print(f'average distribution difference = {ave_diff/eval_samples:.5f} (from {split})...')
