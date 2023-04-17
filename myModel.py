@@ -1,3 +1,6 @@
+# Define all parts in a GPT model, such as attention, MLP, LN modules
+#  (adapted from nanoGPT, https://github.com/karpathy/nanoGPT)
+
 import math
 from dataclasses import dataclass
 import torch

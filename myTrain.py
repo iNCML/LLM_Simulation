@@ -1,3 +1,6 @@
+# training script to learn GPT models based on all given hyper-parameters
+#  (adapted from nanoGPT, https://github.com/karpathy/nanoGPT)
+#
 import os
 import time
 import math
